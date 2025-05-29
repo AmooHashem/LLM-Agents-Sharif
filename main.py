@@ -20,13 +20,11 @@ class TranscriptResponse(BaseModel):
 @app.get("/transcript", response_model=TranscriptResponse)
 def get_transcript_endpoint(video: str = Query(..., description="لینک یا ID ویدئو")):
     try:
-        # دریافت مستقیم ترنسکرایپت بدون استفاده از agent
         result = get_transcript(video)
         if result is None:
             error_msg = "متأسفانه ترنسکرایپت پیدا نشد یا خطایی رخ داد."
             return TranscriptResponse(transcript=error_msg)
 
-        # تبدیل به JSON
         json_result = json.dumps(result, ensure_ascii=False, indent=2)
         return TranscriptResponse(transcript=json_result)
 
