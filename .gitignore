@@ -1,0 +1,89 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# C extensions
+*.so
+
+# Virtual environments
+.venv/
+venv/
+ENV/
+env/
+*.env
+*.env.*
+
+# pipenv
+Pipfile.lock
+
+# poetry
+poetry.lock
+
+# pyright or mypy
+.mypy_cache/
+.pyright/
+
+# pytest
+.cache/
+*.cover
+coverage.*
+htmlcov/
+.tox/
+.nox/
+
+# PyInstaller
+*.spec
+dist/
+build/
+
+# Django stuff (not FastAPI specific, but can appear in hybrid projects)
+*.log
+local_settings.py
+
+# IDEs
+.vscode/
+.idea/
+
+# Editor backups
+*~
+*.swp
+*.swo
+*.bak
+*.tmp
+
+# macOS
+.DS_Store
+
+# Docker
+*.tar
+*.pid
+*.seed
+*.pidfile
+*.log
+docker-compose.override.yml
+
+# Gunicorn
+gunicorn.log
+
+# Uvicorn
+*.db
+*.sqlite3
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Misc
+*.egg
+*.egg-info/
+.eggs/
+MANIFEST
+
+# Node (if frontend or Swagger UI customization is used)
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# FastAPI specific
+instance/
+*.db-journal
