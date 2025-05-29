@@ -1,21 +1,9 @@
 import re
 import os
+from django.conf import settings
 from youtube_transcript_api import YouTubeTranscriptApi
 from youtube_transcript_api.proxies import WebshareProxyConfig
-from pydantic_settings import BaseSettings
 from typing import List, Dict
-
-
-class Settings(BaseSettings):
-    openai_api_key: str
-    openai_api_base: str
-    ENVIRONMENT: str
-
-    class Config:
-        env_file = ".env"
-
-
-settings = Settings()
 
 
 def extract_video_id(video_id_or_url: str) -> str:
