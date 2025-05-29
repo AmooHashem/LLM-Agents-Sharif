@@ -1,6 +1,7 @@
 import re
 import os
 from youtube_transcript_api import YouTubeTranscriptApi
+from youtube_transcript_api.proxies import WebshareProxyConfig
 from pydantic_settings import BaseSettings
 from typing import List, Dict
 
@@ -78,7 +79,13 @@ def get_transcript(video_url_or_id: str) -> List[Dict[str, str]]:
     else:
         try:
             video_id = extract_video_id(video_url_or_id)
-            transcript = YouTubeTranscriptApi.get_transcript(video_id)
+            ytt_api = YouTubeTranscriptApi(
+                proxy_config=WebshareProxyConfig(
+                    proxy_username="tcywqxdw",
+                    proxy_password="gc0f190c7dcn",
+                )
+            )
+            transcript = ytt_api.fetch(video_id)
 
             # تبدیل فرمت زمان از ثانیه به فرمت SRT
             formatted_transcript = []
