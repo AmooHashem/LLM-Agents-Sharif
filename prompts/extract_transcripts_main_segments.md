@@ -29,3 +29,6 @@ You are acting as a professor and need to tell a student—who has very little t
      ```
 
 4. Do not include any additional explanations or transcript text—only provide the list of “start time – end time” for each segment.
+
+
+باید بهش بگیم بازه‌های کمتر از ۱۵ ثانیه رو نادیده بگیره
