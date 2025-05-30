@@ -47,9 +47,9 @@ def build_prompt(transcript_lines: List[str], educational_points: List[str]) -> 
     extraction_instructions = """
     * The final output should be a list of segments in this format:
         ```
-        00:02:15 – 00:02:35
-        00:05:10 – 00:05:30
-        00:08:45 – 00:09:05
+        00:02:15 – 00:02:35 | Purpose of this segment 
+        00:05:10 – 00:05:30 | Purpose of this segment
+        00:08:45 – 00:09:05 | Purpose of this segment
         …
         ```
     """
@@ -57,7 +57,7 @@ def build_prompt(transcript_lines: List[str], educational_points: List[str]) -> 
     # Combine all parts into the final prompt
     prompt = (
         "You are acting as a professor and need to tell a student—who has very little time to prepare for an exam—"
-        "exactly which important parts of this section of the instructional video they should watch. Follow these steps:\n\n"
+        "exactly which important parts of this section of the video he/she should watch. Follow these steps:\n\n"
         + points_section
         + transcript_section
         + extraction_instructions
@@ -69,9 +69,9 @@ def extract_segments(transcript_lines: List[str], educational_points: List[str])
     """
     Takes a list of transcript lines in the format "[HH:MM:SS.ss - HH:MM:SS.ss] text"
     and a list of educational points, constructs the prompt, sends it to the OpenAI API,
-    and extracts the resulting time segments.
+    and extracts the resulting time segments with descriptions.
 
-    Returns a list of strings, each in the format "HH:MM:SS – HH:MM:SS".
+    Returns a list of strings, each in the format "HH:MM:SS – HH:MM:SS | Description".
     """
     # Build the prompt
     prompt = build_prompt(transcript_lines, educational_points)
@@ -90,18 +90,22 @@ def extract_segments(transcript_lines: List[str], educational_points: List[str])
     # Extract the assistant's reply text
     reply_text = response.choices[0].message.content.strip()
 
-    # Use regex to find all time segments in the format "HH:MM:SS – HH:MM:SS"
+    # Use regex to find all time segments with a description, e.g.:
+    # "HH:MM:SS – HH:MM:SS | Some description"
     segment_pattern = re.compile(
-        r"(?P<start>\d{2}:\d{2}:\d{2}(?:\.\d{2})?)\s*–\s*(?P<end>\d{2}:\d{2}:\d{2}(?:\.\d{2})?)"
+        r"(?P<start>\d{2}:\d{2}:\d{2}(?:\.\d{2})?)\s*–\s*"
+        r"(?P<end>\d{2}:\d{2}:\d{2}(?:\.\d{2})?)"
+        r"\s*\|\s*(?P<desc>.+)"
     )
 
-    segments = []
+    segments_with_desc = []
     for match in segment_pattern.finditer(reply_text):
         start = match.group("start")
         end = match.group("end")
-        segments.append(f"{start} – {end}")
+        desc = match.group("desc").strip()
+        segments_with_desc.append(f"{start} – {end} | {desc}")
 
-    return segments
+    return segments_with_desc
 
 
 def extract_transcripts_segments(transcripts, instructional_points):

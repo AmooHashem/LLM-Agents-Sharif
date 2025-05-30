@@ -31,14 +31,16 @@ def format_time(sec: float) -> str:
 
 def sort_and_merge_segments(segments: List[str]) -> List[str]:
     """
-    Given a list of segments in the format "HH:MM:SS – HH:MM:SS" (optionally with decimals),
-    sorts them by start time, and merges any consecutive segments whose gap is <= 1 second.
+    Given a list of segments in the format "HH:MM:SS – HH:MM:SS | Description",
+    sorts them by start time and merges any consecutive segments whose gap is <= 1 second.
+    When merging, concatenates descriptions with " / " between them.
 
-    Returns a new list of merged segments in the same string format.
+    Returns a new list of merged segments in the same format.
     """
-    # 1. Parse all segments into a list of tuples (start_seconds, end_seconds)
-    parsed: List[Tuple[float, float]] = []
-    pattern = re.compile(r"^(?P<start>[\d:.]+)\s*–\s*(?P<end>[\d:.]+)$")
+    parsed: List[Tuple[float, float, str]] = []
+    pattern = re.compile(
+        r"^(?P<start>[\d:.]+)\s*–\s*(?P<end>[\d:.]+)\s*\|\s*(?P<desc>.+)$"
+    )
 
     for seg in segments:
         m = pattern.match(seg.strip())
@@ -46,31 +48,35 @@ def sort_and_merge_segments(segments: List[str]) -> List[str]:
             raise ValueError(f"Invalid segment format: {seg}")
         start_sec = parse_time(m.group("start"))
         end_sec = parse_time(m.group("end"))
-        parsed.append((start_sec, end_sec))
+        desc = m.group("desc").strip()
+        parsed.append((start_sec, end_sec, desc))
 
-    # 2. Sort by start time
+    # Sort by start time
     parsed.sort(key=lambda x: x[0])
 
-    # 3. Merge segments with gap <= 1 second
-    merged: List[Tuple[float, float]] = []
-    for start, end in parsed:
+    # Merge segments with gap <= 1 second
+    merged: List[Tuple[float, float, str]] = []
+    for start, end, desc in parsed:
         if not merged:
-            merged.append((start, end))
+            merged.append((start, end, desc))
         else:
-            prev_start, prev_end = merged[-1]
-            # If the gap between prev_end and current start is <= 1 second, merge
+            prev_start, prev_end, prev_desc = merged[-1]
             if start - prev_end <= 1.0:
-                # Extend the previous end to max(prev_end, end)
-                merged[-1] = (prev_start, max(prev_end, end))
+                # Merge: extend end and combine descriptions
+                merged[-1] = (
+                    prev_start,
+                    max(prev_end, end),
+                    f"{prev_desc} / {desc}"
+                )
             else:
-                merged.append((start, end))
+                merged.append((start, end, desc))
 
-    # 4. Format back into strings
+    # Format output
     result: List[str] = []
-    for start_sec, end_sec in merged:
+    for start_sec, end_sec, desc in merged:
         start_str = format_time(start_sec)
         end_str = format_time(end_sec)
-        result.append(f"{start_str} – {end_str}")
+        result.append(f"{start_str} – {end_str} | {desc}")
 
     return result
 
