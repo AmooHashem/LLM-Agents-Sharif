@@ -1,8 +1,8 @@
+from typing import List, Dict, Union
+from datetime import datetime
 import requests
 import re
 import os
-from youtube_transcript_api import YouTubeTranscriptApi
-from youtube_transcript_api.proxies import WebshareProxyConfig
 from typing import List, Dict
 from dotenv import load_dotenv
 
@@ -21,14 +21,28 @@ def _extract_video_id(video_id_or_url: str) -> str:
     return video_id_or_url
 
 
-def _parse_srt_file(file_path: str) -> List[Dict[str, str]]:
+def _parse_srt_file(file_path: str) -> List[Dict[str, int]]:
     """
-    پردازش فایل SRT و استخراج متن با زمان شروع و پایان
+    پردازش فایل SRT و استخراج متن با زمان شروع و مدت‌زمان (بر حسب ثانیه، به صورت عدد صحیح)
     """
+    def _time_str_to_seconds(time_str: str) -> float:
+        """
+        تبدیل رشته زمان SRT (فرمت "HH:MM:SS,mmm") به تعداد ثانیه (به صورت float)
+        """
+        hours, minutes, rest = time_str.split(':')
+        seconds, milliseconds = rest.split(',')
+        total_seconds = (
+            int(hours) * 3600 +
+            int(minutes) * 60 +
+            int(seconds) +
+            int(milliseconds) / 1000.0
+        )
+        return total_seconds
+
     with open(file_path, 'r', encoding='utf-8') as f:
         content = f.read()
 
-    transcripts = []
+    transcripts: List[Dict[str, int]] = []
     blocks = content.strip().split('\n\n')
 
     for block in blocks:
@@ -37,13 +51,19 @@ def _parse_srt_file(file_path: str) -> List[Dict[str, str]]:
             time_line = lines[1]
             text = ' '.join(lines[2:])
 
-            start_end = time_line.split(' --> ')
-            if len(start_end) == 2:
-                transcripts.append({
-                    'text': text,
-                    'start': start_end[0].strip(),
-                    'end': start_end[1].strip()
-                })
+            start_str, end_str = time_line.split(' --> ')
+            start_seconds = _time_str_to_seconds(start_str.strip())
+            end_seconds = _time_str_to_seconds(end_str.strip())
+
+            # گرد کردن زمان‌ها به ثانیه
+            start_seconds_rounded = round(start_seconds, 3)
+            duration_seconds = round(end_seconds - start_seconds, 3)
+
+            transcripts.append({
+                'text': text,
+                'start': start_seconds_rounded,
+                'duration': duration_seconds
+            })
 
     return transcripts
 
@@ -54,8 +74,8 @@ def get_transcript(video_url_or_id: str) -> List[Dict[str, str]]:
     [
         {
             "text": "متن زیرنویس",
-            "start": "00:00:00,000",
-            "end": "00:00:02,340"
+            "start": "00,000",
+            "duration": "02,340"
         },
         ...
     ]
@@ -91,4 +111,4 @@ def get_transcript(video_url_or_id: str) -> List[Dict[str, str]]:
 
         except Exception as e:
             print(f"Error while fetching transcript: {e}")
-            return None
+            return []

@@ -1,4 +1,6 @@
 from extract_instructional_points import extract_instructional_points
+from extract_transcripts_main_segments import extract_transcripts_segments
+from utils.chunk_transcripts import chunk_transcripts
 from utils.get_transcript_full_text import extract_transcript_text
 from fastapi import FastAPI, HTTPException, Query
 from utils.get_transcript import get_transcript
@@ -25,8 +27,10 @@ async def create_course(video: str = Query(..., description="YouTube video URL o
 
     instructional_points = extract_instructional_points(transcript_full_text)
 
+    segments = extract_transcripts_segments(transcript, instructional_points)
+
     # Simulate processing
-    return instructional_points
+    return segments
 
 
 if __name__ == "__main__":
