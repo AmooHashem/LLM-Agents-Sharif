@@ -1,0 +1,14 @@
+[
+  [
+    "Introduction to different types of machine learning models: reflex, state-based, variable-based, and logic models.",
+    "Explanation of machine learning as a tool for tuning model parameters using data.",
+    "Focus on linear predictors for classification and regression tasks.",
+    "Discussion of various prediction problems: binary classification, regression, multi-class classification, ranking, and structured prediction.",
+    "Explanation of feature extraction and creation of feature vectors.",
+    "Introduction to weight vectors and the use of dot products for prediction scoring.",
+    "Description of linear classifiers and decision boundaries for binary predictions.",
+    "Introduction to loss functions for measuring prediction accuracy, including zero-one loss, hinge loss, squared loss, and absolute deviation loss.",
+    "Explanation of optimization techniques, specifically gradient descent and stochastic gradient descent (SGD).",
+    "Practical coding examples in Python for implementing machine learning concepts, including data generation, loss functions, and optimization algorithms."
+  ]
+]

@@ -1,0 +1,1 @@
+Using only the information presented in this educational video, identify and summarize its key instructional points without including any content that isn’t explicitly covered in the video.

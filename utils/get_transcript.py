@@ -1,12 +1,15 @@
+import requests
 import re
 import os
-from django.conf import settings
 from youtube_transcript_api import YouTubeTranscriptApi
 from youtube_transcript_api.proxies import WebshareProxyConfig
 from typing import List, Dict
+from dotenv import load_dotenv
+
+load_dotenv()
 
 
-def extract_video_id(video_id_or_url: str) -> str:
+def _extract_video_id(video_id_or_url: str) -> str:
     """
     استخراج شناسه ویدیو از URL یا دریافت مستقیم شناسه
     """
@@ -18,14 +21,14 @@ def extract_video_id(video_id_or_url: str) -> str:
     return video_id_or_url
 
 
-def parse_srt_file(file_path: str) -> List[Dict[str, str]]:
+def _parse_srt_file(file_path: str) -> List[Dict[str, str]]:
     """
     پردازش فایل SRT و استخراج متن با زمان شروع و پایان
     """
     with open(file_path, 'r', encoding='utf-8') as f:
         content = f.read()
 
-    subtitles = []
+    transcripts = []
     blocks = content.strip().split('\n\n')
 
     for block in blocks:
@@ -36,13 +39,13 @@ def parse_srt_file(file_path: str) -> List[Dict[str, str]]:
 
             start_end = time_line.split(' --> ')
             if len(start_end) == 2:
-                subtitles.append({
+                transcripts.append({
                     'text': text,
                     'start': start_end[0].strip(),
                     'end': start_end[1].strip()
                 })
 
-    return subtitles
+    return transcripts
 
 
 def get_transcript(video_url_or_id: str) -> List[Dict[str, str]]:
@@ -57,49 +60,35 @@ def get_transcript(video_url_or_id: str) -> List[Dict[str, str]]:
         ...
     ]
     """
-    if settings.ENVIRONMENT == "development":
-        sample_file = os.path.join(os.path.dirname(__file__), "sample.srt")
+    environment = os.getenv("ENVIRONMENT")
+    if environment == "development":
+        sample_file = os.path.join(os.path.dirname(
+            __file__), "..", "samples", "sample-transcript.srt")
 
         if not os.path.exists(sample_file):
             raise FileNotFoundError(f"فایل نمونه {sample_file} یافت نشد.")
 
-        return parse_srt_file(sample_file)
+        return _parse_srt_file(sample_file)
+
     else:
         try:
-            video_id = extract_video_id(video_url_or_id)
-            ytt_api = YouTubeTranscriptApi(
-                proxy_config=WebshareProxyConfig(
-                    proxy_username="tcywqxdw",
-                    proxy_password="gc0f190c7dcn",
-                )
-            )
-            transcript = ytt_api.fetch(video_id)
+            video_id = _extract_video_id(video_url_or_id)
+            youtube_transcription_service_url = os.getenv(
+                "YOUTUBE_TRANSCRIPT_SERVICE_URL")
+            api_url = f"{youtube_transcription_service_url}/transcript?video={video_id}"
+            response = requests.get(api_url)
+            response.raise_for_status()
 
-            # تبدیل فرمت زمان از ثانیه به فرمت SRT
+            transcript = response.json()
             formatted_transcript = []
             for item in transcript:
-                start_seconds = item['start']
-                end_seconds = start_seconds + item['duration']
-
                 formatted_transcript.append({
                     'text': item['text'],
-                    'start': seconds_to_srt_time(start_seconds),
-                    'end': seconds_to_srt_time(end_seconds)
+                    'start': item['start'],
+                    'duration': item['duration']
                 })
-
             return formatted_transcript
+
         except Exception as e:
-            print(f"Error: {e}")
+            print(f"Error while fetching transcript: {e}")
             return None
-
-
-def seconds_to_srt_time(seconds: float) -> str:
-    """
-    تبدیل زمان از ثانیه به فرمت SRT (HH:MM:SS,mmm)
-    """
-    hours = int(seconds // 3600)
-    minutes = int((seconds % 3600) // 60)
-    seconds_remainder = seconds % 60
-    millis = int((seconds_remainder - int(seconds_remainder)) * 1000)
-
-    return f"{hours:02d}:{minutes:02d}:{int(seconds_remainder):02d},{millis:03d}"

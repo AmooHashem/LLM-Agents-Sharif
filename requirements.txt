@@ -6,3 +6,4 @@ pydantic-settings
 langchain
 openai
 youtube-transcript-api
+tiktoken

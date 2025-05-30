@@ -31,7 +31,7 @@ def chunk_srt(srt_path):
     with 5-minute overlap between consecutive chunks.
 
     Returns:
-        List of chunks, where each chunk is a list of subtitle‐entry dicts:
+        List of chunks, where each chunk is a list of transcript‐entry dicts:
             {
                 "index":      <int>,
                 "start":      <timedelta>,
@@ -73,7 +73,7 @@ def chunk_srt(srt_path):
         start_td = parse_srt_timestamp(start_ts)
         end_td = parse_srt_timestamp(end_ts)
 
-        # The remaining lines (2:) are the subtitle text
+        # The remaining lines (2:) are the transcript text
         text = "\n".join(lines[2:])
 
         parsed_entries.append({
@@ -86,7 +86,7 @@ def chunk_srt(srt_path):
     if not parsed_entries:
         return []
 
-    # 3) Determine the time span: start at the first subtitle's start, end at the last subtitle's end
+    # 3) Determine the time span: start at the first transcript's start, end at the last transcript's end
     first_start = parsed_entries[0]["start"]
     last_end = parsed_entries[-1]["end"]
 
